@@ -11,8 +11,8 @@ lines = [data(1){:}];
 datas = cell2mat(cellfun(@double, data(2:end), 'uni', false));
 lat = [data(3){:}];
 lon = [data(4){:}];
-elevation = [data(5){:}];
-obs_grav = [data(6){:}];
+elevation = [data(5){:}]; % meters
+obs_grav = [data(6){:}]; %mGal
 
 % GGM Model for height anomalies/ long wavelength undulation
 fid = fopen ("GGM05C_AN01.gdf", "r");
@@ -29,7 +29,7 @@ normal_grav = compute_normal_grav(lat, 'WGS84'); %mGal
 
 % Calculating Free-air Gravity Anomaly
 ortho_height = elevation + height_anomaly_ggm;
-FAA = compute_free_air_anomaly(obs_grav, lat, height_anomaly_ggm, 'WGS84'); %mGal
+FAA = compute_free_air_anomaly(obs_grav, lat, ortho_height, 'WGS84'); %mGal
 
 % GGM Model for gravity anomalies
 fid = fopen ("GGM05C_gravityanomaly.gdf", "r");
@@ -42,8 +42,8 @@ gravity_anomaly_gg = [ggm(3){:}]; % mGal
 gravity_anomaly_ggm = griddata (lon_ggm,lat_ggm,gravity_anomaly_gg,lon,lat, 'v4');
 
 anomaly_smw = FAA - gravity_anomaly_ggm;
-atm_correction = compute_atm_correction(elevation);
-anomaly_ggm_corr = gravity_anomaly_ggm - atm_correction;
+atm_correction = compute_atm_correction(ortho_height);
+anomaly_smw_atm = anomaly_smw - atm_correction;
 
 #plot3(lon,lat,anomaly_ggm_corr,'mo')
 figure;
@@ -60,7 +60,9 @@ colorbar;
 
 %% 6)
 % Creating a grid
-[X, Y, anomaly_grid] = create_grid(anomaly_ggm_corr, 0.05, lat, lon);
+[X, Y, anomaly_grid] = create_grid(anomaly_smw_atm, 0.05, lat, lon);
 mesh(X, Y, anomaly_grid);
 %mesh(lon,lat,anomaly_ggm_corr)
 %surf(lon,lat,anomaly_ggm_corr);
+
+
