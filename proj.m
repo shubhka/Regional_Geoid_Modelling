@@ -14,31 +14,46 @@ lon = [data(4){:}];
 elevation = [data(5){:}];
 obs_grav = [data(6){:}];
 
-normal_grav = compute_normal_grav(lat, 'WGS84');
-FAA = compute_free_air_anomaly(obs_grav, lat, elevation, 'WGS84');
-
-%% 4)
+% GGM Model for height anomalies/ long wavelength undulation
 fid = fopen ("GGM05C_AN01.gdf", "r");
 ggm = textscan (fid,'%f%f%f\n','Delimiter',' ','MultipleDelimsAsOne',1, 'HeaderLines',36);
 lon_ggm = [ggm(1){:}]-360;
 lat_ggm = [ggm(2){:}];
-anomaly_gg = [ggm(3){:}];
+height_anomaly_gg = [ggm(3){:}]; % meters
+
+% Interpolate GGM lat-lon to GRAV-D lat-lon for height anomaly
+height_anomaly_ggm = griddata (lon_ggm,lat_ggm,height_anomaly_gg,lon,lat, 'v4');
+
+% Calculating Normal Gravity
+normal_grav = compute_normal_grav(lat, 'WGS84'); %mGal
+
+% Calculating Free-air Gravity Anomaly
+ortho_height = elevation + height_anomaly_ggm;
+FAA = compute_free_air_anomaly(obs_grav, lat, height_anomaly_ggm, 'WGS84'); %mGal
+
+% GGM Model for gravity anomalies
+fid = fopen ("GGM05C_gravityanomaly.gdf", "r");
+ggm = textscan (fid,'%f%f%f\n','Delimiter',' ','MultipleDelimsAsOne',1, 'HeaderLines',36);
+lon_ggm = [ggm(1){:}]-360;
+lat_ggm = [ggm(2){:}];
+gravity_anomaly_gg = [ggm(3){:}]; % mGal
 
 % Interpolate GGM lat-lon to GRAV-D lat-lon
-anomaly_ggm = griddata (lon_ggm,lat_ggm,anomaly_gg,lon,lat);
-anomaly_smw = FAA - anomaly_ggm;
+gravity_anomaly_ggm = griddata (lon_ggm,lat_ggm,gravity_anomaly_gg,lon,lat, 'v4');
+
+anomaly_smw = FAA - gravity_anomaly_ggm;
 atm_correction = compute_atm_correction(elevation);
-anomaly_ggm_corr = anomaly_ggm - atm_correction;
+anomaly_ggm_corr = gravity_anomaly_ggm - atm_correction;
 
 #plot3(lon,lat,anomaly_ggm_corr,'mo')
 figure;
-scatter(lon,lat,25,anomaly_ggm,'filled')
+scatter(lon,lat,25,gravity_anomaly_ggm,'filled')
 xlim([min(lon) max(lon)]);
 daspect ([1 1]);
 colorbar;
 
 figure;
-scatter(lon_ggm,lat_ggm,25,anomaly_gg,'filled')
+scatter(lon_ggm,lat_ggm,25,gravity_anomaly_gg,'filled')
 xlim([min(lon) max(lon)]);
 daspect ([1 1]);
 colorbar;
