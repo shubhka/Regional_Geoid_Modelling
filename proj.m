@@ -1,4 +1,4 @@
-fid = fopen ("NGS_GRAVD_Block_AN01_Gravity_Data_BETA1.txt", "r");
+fid = fopen ("NGS_GRAVD_Block_MS01_Gravity_Data_BETA1.txt", "r");
 % Reading header files into a vector of strings
 %header = textscan (fid,'%s', 21, 'Delimiter','\n');
 %header = [header{:}];
@@ -6,20 +6,25 @@ fid = fopen ("NGS_GRAVD_Block_AN01_Gravity_Data_BETA1.txt", "r");
 %disp(header);
 
 % Reading data into a matrix
-data = textscan (fid,'AN01%d%d%f%f%f%f\n','Delimiter',' ','MultipleDelimsAsOne',1, 'CommentStyle', '/');
+data = textscan (fid,'MS01%d%d%f%f%f%f\n','Delimiter',' ','MultipleDelimsAsOne',1, 'CommentStyle', '/');
 lines = [data(1){:}];
 datas = cell2mat(cellfun(@double, data(2:end), 'uni', false));
-lat = [data(3){:}];
-lon = [data(4){:}];
-elevation = [data(5){:}]; % meters
-obs_grav = [data(6){:}]; %mGal
+datas = datas(datas(:,2) >= 32.5, :);
+datas = datas(datas(:,2) <= 33.5, :);
+datas = datas(datas(:,3) >= -106, :);
+datas = datas(datas(:,3) <= -105, :);
+lat = datas(:,2);
+lon = datas(:,3);
+elevation = datas(:,4); % meters
+obs_grav = datas(:,5); %mGal
 
-% GGM Model for height anomalies/ long wavelength undulation
-fid = fopen ("GGM05C_AN01.gdf", "r");
-ggm = textscan (fid,'%f%f%f\n','Delimiter',' ','MultipleDelimsAsOne',1, 'HeaderLines',36);
-lon_ggm = [ggm(1){:}]-360;
-lat_ggm = [ggm(2){:}];
-height_anomaly_gg = [ggm(3){:}]; % meters
+% GGM Model for height anomalies and gravity anomalies
+fid = fopen ("GGM05C1.dat", "r");
+ggm = textscan (fid,'%f%f%f%f%f%f%f%f%f%f%f\n','Delimiter',' ','MultipleDelimsAsOne',1, 'HeaderLines',42);
+lon_ggm = [ggm(2){:}];
+lat_ggm = [ggm(3){:}];
+height_anomaly_gg = [ggm(6){:}]; % meters
+gravity_anomaly_gg = [ggm(11){:}]; % mGal
 
 % Interpolate GGM lat-lon to GRAV-D lat-lon for height anomaly
 height_anomaly_ggm = griddata (lon_ggm,lat_ggm,height_anomaly_gg,lon,lat, 'v4');
@@ -31,13 +36,6 @@ normal_grav = compute_normal_grav(lat, 'WGS84'); %mGal
 ortho_height = elevation + height_anomaly_ggm;
 FAA = compute_free_air_anomaly(obs_grav, lat, ortho_height, 'WGS84'); %mGal
 
-% GGM Model for gravity anomalies
-fid = fopen ("GGM05C_gravityanomaly.gdf", "r");
-ggm = textscan (fid,'%f%f%f\n','Delimiter',' ','MultipleDelimsAsOne',1, 'HeaderLines',36);
-lon_ggm = [ggm(1){:}]-360;
-lat_ggm = [ggm(2){:}];
-gravity_anomaly_gg = [ggm(3){:}]; % mGal
-
 % Interpolate GGM lat-lon to GRAV-D lat-lon
 gravity_anomaly_ggm = griddata (lon_ggm,lat_ggm,gravity_anomaly_gg,lon,lat, 'v4');
 
@@ -47,7 +45,7 @@ anomaly_smw_atm = anomaly_smw - atm_correction;
 
 #plot3(lon,lat,anomaly_ggm_corr,'mo')
 figure;
-scatter(lon,lat,25,gravity_anomaly_ggm,'filled')
+scatter(lon,lat,25,FAA,'filled')
 xlim([min(lon) max(lon)]);
 daspect ([1 1]);
 colorbar;
@@ -65,4 +63,8 @@ mesh(X, Y, anomaly_grid);
 %mesh(lon,lat,anomaly_ggm_corr)
 %surf(lon,lat,anomaly_ggm_corr);
 
+pkg load mapping
+[A1, R1] = rasterread('srtm_16_06.tif');
+[A2, R2] = rasterread('srtm_15_06.tif');
+Heights = [A1.data, A2.data];
 

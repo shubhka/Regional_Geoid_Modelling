@@ -1,5 +1,5 @@
 % GGM Model
-fid = fopen ("GGM05C_AN01.gdf", "r");
+fid = fopen ("GGM05C_MS01_h.gdf", "r");
 ggm = textscan (fid,'%f%f%f\n','Delimiter',' ','MultipleDelimsAsOne',1, 'HeaderLines',36);
 lon_ggm = [ggm(1){:}]-360;
 lat_ggm = [ggm(2){:}];
@@ -11,7 +11,7 @@ title('height anomaly (m)');
 print -djpg heightanomaly.jpg
 
 % Writing GGM values to CSV file for use in QGIS
-csvwrite('GGM05C_AN01.txt', [lat_ggm, lon_ggm, anomaly_gg]);
+csvwrite('GGM05C_MS01_ga.txt', [lat_ggm, lon_ggm, anomaly_gg]);
 
 fid = fopen ("GGM05C_gravityanomaly.gdf", "r");
 ggm = textscan (fid,'%f%f%f\n','Delimiter',' ','MultipleDelimsAsOne',1, 'HeaderLines',36);
