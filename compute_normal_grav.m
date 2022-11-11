@@ -1,4 +1,11 @@
 function [normal_grav] = compute_normal_grav(lat, ref_Ellipsoid)
+  %calculates Normal Gravity for data point with a given latitude 
+  %INPUT - 
+  %1. lat (double) - (degree) Latitudes of the data points
+  %2. ref_ellipsoid(string) - reference ellipsoid either 'WGS84' or 'GRS80'
+  %OUTPUT - 
+  %   normal_grav (double) - (mGal) Normal Gravity with respect to the given ellipsoid
+
   ellipsoid = choose_Ellipsoid(ref_Ellipsoid);
   eq_grav = ellipsoid.gammaEquator;
   polar_grav = ellipsoid.gammaPole;

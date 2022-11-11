@@ -1,4 +1,10 @@
 function val = astronomical_constants(constant)
+  %Function for accessing astronomical constants
+  %INPUT - 
+  %1. constant (string) - String corresponding to the astronomical constant
+  %OUTPUT - 
+  %   ellipsoid (struct) - Structure containing the value, unit and uncertainity for the constant
+
   if (strcmp(constant, "k")==1)
     val.value = 1.720209895*1e-2;
     val.units = '';

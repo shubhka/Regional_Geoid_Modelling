@@ -1,4 +1,11 @@
 function [ellipsoid] = choose_Ellipsoid(ellipType)
+  %Function for accessing constants related to 'WGS84' or 'GRS80'
+  %INPUT - 
+  %1. ellipType (string) - reference ellipsoid either 'WGS84' or 'GRS80'
+  %OUTPUT - 
+  %   ellipsoid (struct) - Structure containing all the constants related to ellipsoids
+
+  
   switch ellipType
     case 'WGS84'
       ellipsoid.GM = 3986004.418E8;

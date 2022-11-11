@@ -1,4 +1,12 @@
 function [correction] = compute_free_air_correction(lat, elevation, ref_Ellipsoid)
+  %calculates free air correction for data point with a given latitude and elevation 
+  %INPUT - 
+  %1. lat (double) - (degree) Latitudes of the data points
+  %2  elevation (double) -(meter) orthometric height of the data points
+  %2. ref_ellipsoid(string) - reference ellipsoid either 'WGS84' or 'GRS80'
+  %OUTPUT - 
+  %   normal_grav (double) - (mGal) Normal Gravity with respect to the given ellipsoid
+
   ellipsoid = choose_Ellipsoid(ref_Ellipsoid);
   eq_grav = ellipsoid.gammaEquator;
   polar_grav = ellipsoid.gammaPole;
